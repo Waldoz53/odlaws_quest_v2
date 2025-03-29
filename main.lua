@@ -8,7 +8,9 @@ local player = {
   image = nil,
   direction = "idle",
   scale = 3,
-  attackRange = 50
+  attackRange = 50,
+  attackDamage = 10,
+  attackRate = 1.00
 }
 
 -- Loads settings, sprites, etc
