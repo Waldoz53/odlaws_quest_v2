@@ -3,7 +3,7 @@ local player = {
   y = 300,
   speed = 200,
   image = nil,
-  direction = "none",
+  direction = "idle",
   scale = 3
 }
 
@@ -26,33 +26,30 @@ function love.update(dt)
   if love.keyboard.isDown('w') then
     moveY = -1
     player.direction = 'up'
+    player.image = player.imageUp
   elseif love.keyboard.isDown('s') then
     moveY = 1
     player.direction = 'down'
-  elseif love.keyboard.isDown('a') then
+    player.image = player.imageDown
+  end
+
+  if love.keyboard.isDown('a') then
     moveX = -1
     player.direction = 'left'
+    player.image = player.imageLeft
   elseif love.keyboard.isDown('d') then
     moveX = 1
     player.direction = 'right'
-  else
+    player.image = player.imageRight
+  end
+
+  if not (love.keyboard.isDown('w') or love.keyboard.isDown('a') or love.keyboard.isDown('s') or love.keyboard.isDown('d')) then
     player.direction = 'idle'
+    player.image = player.imageIdle
   end
 
   player.x = player.x + moveX * player.speed * dt
   player.y = player.y + moveY * player.speed * dt
-
-  if player.direction == 'up' then
-    player.image = player.imageUp
-  elseif player.direction == 'down' then
-    player.image = player.imageDown
-  elseif player.direction == 'left' then
-    player.image = player.imageLeft
-  elseif player.direction == 'right' then
-    player.image = player.imageRight
-  else 
-    player.image = player.imageIdle
-  end
 end
 
 -- Draws everything as needed
