@@ -1,15 +1,20 @@
+-- Player class
 local player = {
+  maxHp = 100,
+  currentHp = 100,
   x = 400,
   y = 300,
   speed = 200,
   image = nil,
   direction = "idle",
-  scale = 3
+  scale = 3,
+  attackRange = 50
 }
 
 -- Loads settings, sprites, etc
 function love.load()
-  love.window.setTitle("Odlaw's Quest v2")
+  love.window.setTitle("Odlaw's Quest 2")
+  love.graphics.setBackgroundColor( 0, .4, .6, .2 )
 
   player.imageDown = love.graphics.newImage("odlaw_sprite/odlaw_down.png")
   player.imageUp = love.graphics.newImage("odlaw_sprite/odlaw_up.png")
@@ -50,10 +55,30 @@ function love.update(dt)
 
   player.x = player.x + moveX * player.speed * dt
   player.y = player.y + moveY * player.speed * dt
+
+  function love.keypressed(k)
+    if k == 'escape' then
+       love.event.quit()
+    end
+ end
 end
 
 -- Draws everything as needed
 function love.draw()
   -- Draws the player, position x, position y, 0 rotation, player scaleX, player scaleY)
   love.graphics.draw(player.image, player.x, player.y, 0, player.scale, player.scale)
+
+  -- Melee attack hitbox drawing for testing sizes
+  if love.keyboard.isDown('up') then
+    love.graphics.rectangle("fill", player.x + 32, player.y - 23, 36, player.attackRange)
+  elseif love.keyboard.isDown('down') then
+    love.graphics.rectangle("fill", player.x + 32, player.y + 68, 36, player.attackRange)
+  elseif love.keyboard.isDown('left') then
+    love.graphics.rectangle("fill", player.x - 20, player.y + 28, player.attackRange, 36)
+  elseif love.keyboard.isDown('right') then
+    love.graphics.rectangle("fill", player.x + 70, player.y + 28, player.attackRange, 36)
+  end
+
+  -- Draws the UI element for player HP
+  love.graphics.print("HP: " .. player.currentHp .. " / " .. player.maxHp, 5, 5)
 end
