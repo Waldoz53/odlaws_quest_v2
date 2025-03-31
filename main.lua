@@ -27,17 +27,30 @@ local enemy = {
   isAlive = true
 }
 
--- A message "log"
+-- A message "log" + its display + clear functions
 local message = ''
+local messageTimer = 2
+local timeSinceLastMessage = 0
 
-function checkCollision(x1, y1, w1, h1, x2, y2, w2, h2)
+local function displayMessage(msg)
+  message = msg
+  timeSinceLastMessage = 0
+end
+local function clearMessage(delta)
+  timeSinceLastMessage = timeSinceLastMessage + delta
+  if timeSinceLastMessage >= messageTimer then
+    message = ''
+  end
+end
+
+local function checkCollision(x1, y1, w1, h1, x2, y2, w2, h2)
   return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2
 end
 
 -- Loads settings, sprites, etc
 function love.load()
   love.window.setTitle("Odlaw's Quest 2")
-  love.graphics.setBackgroundColor( 0, .4, .6, .2 )
+  love.graphics.setBackgroundColor(0, .4, .6, .2)
 
   player.imageDown = love.graphics.newImage("assets/odlaw_sprite/odlaw_down.png")
   player.imageUp = love.graphics.newImage("assets/odlaw_sprite/odlaw_up.png")
@@ -129,9 +142,11 @@ function love.update(dt)
     if enemy.isAlive and checkCollision(hitX, hitY, hitW, hitH, enemy.x, enemy.y, enemy.width, enemy.height) then
       enemy.isAlive = false
       print("Enemy hit!")
-      message = "Enemy hit!"
+      displayMessage("Enemy hit!")
     end
   end
+
+  clearMessage(dt)
 
   function love.keypressed(k)
     if k == 'escape' then
