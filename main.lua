@@ -12,7 +12,7 @@ local player = {
   attackDamage = 10,
   isAttacking = false,
   attackCooldown = 1.00,
-  timeSinceLastAttack = 0
+  timeSinceLastAttack = 0,
 }
 
 -- Enemy class
@@ -29,6 +29,10 @@ local enemy = {
 
 -- A message "log"
 local message = ''
+
+function checkCollision(x1, y1, w1, h1, x2, y2, w2, h2)
+  return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2
+end
 
 -- Loads settings, sprites, etc
 function love.load()
@@ -85,9 +89,48 @@ function love.update(dt)
     if love.keyboard.isDown('up') or love.keyboard.isDown('down') or love.keyboard.isDown('left') or love.keyboard.isDown('right') then
       player.isAttacking = true
       player.timeSinceLastAttack = 0
+    else
+      player.isAttacking = false
     end
   else 
     player.isAttacking = false
+  end
+
+  -- check for player attack collision with enemy
+  if player.isAttacking then
+    local hitX, hitY, hitW, hitH
+
+    if love.keyboard.isDown('up') then
+      player.direction = "up"
+      hitX = player.x + 32
+      hitY = player.y - 23
+      hitW = 36
+      hitH = player.attackRange
+    elseif love.keyboard.isDown('down') then
+      player.direction = "down"
+      hitX = player.x + 32
+      hitY = player.y + 68
+      hitW = 36
+      hitH = player.attackRange
+    elseif love.keyboard.isDown('left') then
+      player.direction = "left"
+      hitX = player.x - 20
+      hitY = player.y + 28
+      hitW = player.attackRange
+      hitH = 36
+    elseif love.keyboard.isDown('right') then
+      player.direction = "right"
+      hitX = player.x + 70
+      hitY = player.y + 28
+      hitW = player.attackRange
+      hitH = 36
+    end
+
+    if enemy.isAlive and checkCollision(hitX, hitY, hitW, hitH, enemy.x, enemy.y, enemy.width, enemy.height) then
+      enemy.isAlive = false
+      print("Enemy hit!")
+      message = "Enemy hit!"
+    end
   end
 
   function love.keypressed(k)
@@ -102,24 +145,49 @@ function love.draw()
   -- Draws the player, position x, position y, 0 rotation, player scaleX, player scaleY)
   love.graphics.draw(player.image, player.x, player.y, 0, player.scale, player.scale)
 
-  if player.isAttacking then
-    -- Melee attack hitbox drawing for testing sizes
-    if love.keyboard.isDown('up') then
-      love.graphics.rectangle("fill", player.x + 32, player.y - 23, 36, player.attackRange)
-    elseif love.keyboard.isDown('down') then
-      love.graphics.rectangle("fill", player.x + 32, player.y + 68, 36, player.attackRange)
-    elseif love.keyboard.isDown('left') then
-      love.graphics.rectangle("fill", player.x - 20, player.y + 28, player.attackRange, 36)
-    elseif love.keyboard.isDown('right') then
-      love.graphics.rectangle("fill", player.x + 70, player.y + 28, player.attackRange, 36)
+  -- draw enemy
+  if enemy.isAlive then
+    if enemy.image then
+      love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, 2, 2)
+    -- else
+      love.graphics.setColor(1, 0, 0, .5)
+      love.graphics.rectangle("fill", enemy.x, enemy.y, enemy.width, enemy.height)
+      love.graphics.setColor(1, 1, 1)
     end
   end
 
-  -- draw enemy
-  love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, 2, 2)
+  if player.isAttacking then
+    local hitX, hitY, hitW, hitH
+
+    -- Melee attack hitbox drawing
+    if player.direction == 'up' then
+      hitX = player.x + 32
+      hitY = player.y - 23
+      hitW = 36
+      hitH = player.attackRange
+    elseif player.direction == 'down' then
+      hitX = player.x + 32
+      hitY = player.y + 68
+      hitW = 36
+      hitH = player.attackRange
+    elseif player.direction == 'left' then
+      hitX = player.x - 20
+      hitY = player.y + 28
+      hitW = player.attackRange
+      hitH = 36
+    elseif player.direction == "right" then
+      hitX = player.x + 70
+      hitY = player.y + 28
+      hitW = player.attackRange
+      hitH = 36
+    end
+
+    love.graphics.rectangle("fill", hitX, hitY, hitW, hitH)
+  end
 
   -- Draws the UI element for player HP
   love.graphics.print("HP: " .. player.currentHp .. " / " .. player.maxHp, 5, 5)
-  -- Draws the UI element for player score
-  -- love.graphics.print(message, 700, 5)
+
+  -- Draws the UI element for player score, or any other messages
+  love.graphics.print(message, 700, 5)
 end
