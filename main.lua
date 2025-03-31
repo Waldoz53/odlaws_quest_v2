@@ -25,7 +25,10 @@ local enemy = {
   image = nil,
   width = 30,
   height = 32,
-  isAlive = true
+  isAlive = true,
+  speed = 50,
+  targetX = player.x,
+  targetY = player.y,
 }
 
 -- A message "log" + its display + clear functions
@@ -66,6 +69,21 @@ end
 -- Updates anything as needed
 function love.update(dt)
   local moveX, moveY = 0, 0
+
+  -- handles enemy movement
+  if not enemy.targetX or not enemy.targetY or math.abs(enemy.x - enemy.targetX) < 5 and math.abs(enemy.y - enemy.targetY) < 5 then
+    enemy.targetX = player.x + love.math.random(0, 40)
+    enemy.targetY = player.y + love.math.random(0, 40)
+  end
+
+  local dx = enemy.targetX - enemy.x
+  local dy = enemy.targetY - enemy.y
+  local distance = math.sqrt(dx * dx + dy * dy)
+
+  if distance > 0 then
+    enemy.x = enemy.x + (dx / distance) * enemy.speed * dt
+    enemy.y = enemy.y + (dy / distance) * enemy.speed * dt
+  end
 
   -- Update player attack timer
   player.timeSinceLastAttack = player.timeSinceLastAttack + dt
