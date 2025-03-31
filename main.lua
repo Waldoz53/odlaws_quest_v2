@@ -23,8 +23,8 @@ local enemy = {
   x = 600,
   y = 200,
   image = nil,
-  width = 40,
-  height = 40,
+  width = 30,
+  height = 32,
   isAlive = true
 }
 
@@ -160,13 +160,15 @@ end
 -- Draws everything as needed
 function love.draw()
   -- Draws the player, position x, position y, 0 rotation, player scaleX, player scaleY)
+  -- love.graphics.setColor(1, 0, 1, .5)
   love.graphics.draw(player.image, player.x, player.y, 0, player.scale, player.scale)
+  -- love.graphics.setColor(1, 1, 1)
 
   -- draw enemy
   if enemy.isAlive then
     if enemy.image then
       love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, 2, 2)
-    -- else
+    else
       love.graphics.setColor(1, 0, 0, .5)
       love.graphics.rectangle("fill", enemy.x, enemy.y, enemy.width, enemy.height)
       love.graphics.setColor(1, 1, 1)
