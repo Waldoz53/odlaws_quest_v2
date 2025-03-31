@@ -31,7 +31,7 @@ local enemy = {
   targetY = player.y,
 }
 
--- A message "log" + its display + clear functions
+-- Displays and clears messages after a 2 second timer
 local message = ''
 local messageTimer = 2
 local timeSinceLastMessage = 0
@@ -40,13 +40,16 @@ local function displayMessage(msg)
   message = msg
   timeSinceLastMessage = 0
 end
+
 local function clearMessage(delta)
   timeSinceLastMessage = timeSinceLastMessage + delta
   if timeSinceLastMessage >= messageTimer then
     message = ''
   end
 end
+--
 
+-- Bounding collision check
 local function checkCollision(x1, y1, w1, h1, x2, y2, w2, h2)
   return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2
 end
@@ -56,6 +59,7 @@ function love.load()
   love.window.setTitle("Odlaw's Quest 2")
   love.graphics.setBackgroundColor(0, .4, .6, .2)
 
+-- Loads player sprites
   player.imageDown = love.graphics.newImage("assets/odlaw_sprite/odlaw_down.png")
   player.imageUp = love.graphics.newImage("assets/odlaw_sprite/odlaw_up.png")
   player.imageLeft = love.graphics.newImage("assets/odlaw_sprite/odlaw_left.png")
@@ -63,6 +67,7 @@ function love.load()
   player.imageIdle = love.graphics.newImage("assets/odlaw_sprite/odlaw_idle.png")
   player.image = player.imageIdle
 
+  -- Loads enemy sprites
   enemy.image = love.graphics.newImage("assets/greenskin.png")
 end
 
@@ -84,6 +89,7 @@ function love.update(dt)
     enemy.x = enemy.x + (dx / distance) * enemy.speed * dt
     enemy.y = enemy.y + (dy / distance) * enemy.speed * dt
   end
+  --
 
   -- Update player attack timer
   player.timeSinceLastAttack = player.timeSinceLastAttack + dt
@@ -112,9 +118,12 @@ function love.update(dt)
     player.direction = 'idle'
     player.image = player.imageIdle
   end
+  --
 
+  -- Moves the player
   player.x = player.x + moveX * player.speed * dt
   player.y = player.y + moveY * player.speed * dt
+  --
 
   -- handles attacks
   if player.timeSinceLastAttack >= player.attackCooldown then
@@ -127,6 +136,7 @@ function love.update(dt)
   else 
     player.isAttacking = false
   end
+  --
 
   -- check for player attack collision with enemy
   if player.isAttacking then
@@ -165,19 +175,21 @@ function love.update(dt)
       player.score = player.score + 1
     end
   end
+  --
 
+  -- Runs clear message function
   clearMessage(dt)
 
   function love.keypressed(k)
     if k == 'escape' then
        love.event.quit()
     end
- end
+  end
 end
 
 -- Draws everything as needed
 function love.draw()
-  -- Push, pop and translate
+  -- Push, translate and pop allows for camera to lock to the player
   love.graphics.push()
   love.graphics.translate(-player.x - 40 + love.graphics.getWidth() / 2, -player.y - 40 + love.graphics.getHeight() / 2)
 
@@ -224,6 +236,7 @@ function love.draw()
     love.graphics.rectangle("fill", hitX, hitY, hitW, hitH)
   end
   love.graphics.pop()
+  --
 
   -- Draws the UI element for player HP
   love.graphics.print("HP: " .. player.currentHp .. " / " .. player.maxHp, 5, 5)
