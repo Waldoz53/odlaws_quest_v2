@@ -1,5 +1,6 @@
 -- Player class
 local player = {
+  score = 0,
   maxHp = 100,
   currentHp = 100,
   x = 400,
@@ -143,6 +144,7 @@ function love.update(dt)
       enemy.isAlive = false
       print("Enemy hit!")
       displayMessage("Enemy hit!")
+      player.score = player.score + 1
     end
   end
 
@@ -203,6 +205,9 @@ function love.draw()
   -- Draws the UI element for player HP
   love.graphics.print("HP: " .. player.currentHp .. " / " .. player.maxHp, 5, 5)
 
-  -- Draws the UI element for player score, or any other messages
+  -- Draws the UI element for ingame messages
   love.graphics.print(message, 700, 5)
+
+  -- Draws the UI element for player's score
+  love.graphics.print("Score: " .. player.score, 350, 5)
 end
