@@ -159,10 +159,12 @@ end
 
 -- Draws everything as needed
 function love.draw()
+  -- Push, pop and translate
+  love.graphics.push()
+  love.graphics.translate(-player.x - 40 + love.graphics.getWidth() / 2, -player.y - 40 + love.graphics.getHeight() / 2)
+
   -- Draws the player, position x, position y, 0 rotation, player scaleX, player scaleY)
-  -- love.graphics.setColor(1, 0, 1, .5)
   love.graphics.draw(player.image, player.x, player.y, 0, player.scale, player.scale)
-  -- love.graphics.setColor(1, 1, 1)
 
   -- draw enemy
   if enemy.isAlive then
@@ -203,6 +205,7 @@ function love.draw()
 
     love.graphics.rectangle("fill", hitX, hitY, hitW, hitH)
   end
+  love.graphics.pop()
 
   -- Draws the UI element for player HP
   love.graphics.print("HP: " .. player.currentHp .. " / " .. player.maxHp, 5, 5)
