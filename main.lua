@@ -17,19 +17,19 @@ local player = {
 }
 
 -- Enemy class
-local enemy = {
-  maxHP = 10,
-  currentHP = 10,
-  x = 600,
-  y = 200,
-  image = nil,
-  width = 30,
-  height = 32,
-  isAlive = true,
-  speed = 50,
-  targetX = player.x,
-  targetY = player.y,
-}
+-- local enemy = {
+--   maxHP = 10,
+--   currentHP = 10,
+--   x = love.math.random(player.x - 200, player.x + 200),
+--   y = love.math.random(player.y - 200, player.y + 200),
+--   image = nil,
+--   width = 30,
+--   height = 32,
+--   isAlive = true,
+--   speed = 50,
+--   targetX = player.x,
+--   targetY = player.y,
+-- }
 
 -- Displays and clears messages after a 2 second timer
 local message = ''
@@ -54,42 +54,66 @@ local function checkCollision(x1, y1, w1, h1, x2, y2, w2, h2)
   return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2
 end
 
+-- enemy spawning variables
+local enemies = {}
+local spawnTimer = 0
+local spawnInterval = 3
+
 -- Loads settings, sprites, etc
 function love.load()
   love.window.setTitle("Odlaw's Quest 2")
   love.graphics.setBackgroundColor(0, .4, .6, .2)
 
--- Loads player sprites
+  -- Loads player sprites
   player.imageDown = love.graphics.newImage("assets/odlaw_sprite/odlaw_down.png")
   player.imageUp = love.graphics.newImage("assets/odlaw_sprite/odlaw_up.png")
   player.imageLeft = love.graphics.newImage("assets/odlaw_sprite/odlaw_left.png")
   player.imageRight = love.graphics.newImage("assets/odlaw_sprite/odlaw_right.png")
   player.imageIdle = love.graphics.newImage("assets/odlaw_sprite/odlaw_idle.png")
   player.image = player.imageIdle
-
-  -- Loads enemy sprites
-  enemy.image = love.graphics.newImage("assets/greenskin.png")
 end
 
 -- Updates anything as needed
 function love.update(dt)
   local moveX, moveY = 0, 0
 
-  -- handles enemy movement
-  if not enemy.targetX or not enemy.targetY or math.abs(enemy.x - enemy.targetX) < 5 and math.abs(enemy.y - enemy.targetY) < 5 then
-    enemy.targetX = player.x + love.math.random(0, 40)
-    enemy.targetY = player.y + love.math.random(0, 40)
+  -- Enemy spawning
+  spawnTimer = spawnTimer - dt
+  if spawnTimer <= 0 then
+    spawnTimer = spawnInterval
+    local enemy = {
+      maxHP = 10,
+      currentHP = 10,
+      x = love.math.random(player.x - 400, player.x + 400),
+      y = love.math.random(player.y - 400, player.y + 400),
+      image = love.graphics.newImage("assets/greenskin.png"),
+      width = 30,
+      height = 32,
+      isAlive = true,
+      speed = love.math.random(30, 60),
+      targetX = player.x + love.math.random(-30, 30),
+      targetY = player.y + love.math.random(-30, 30),
+    }
+    table.insert(enemies, enemy)
   end
 
-  local dx = enemy.targetX - enemy.x
-  local dy = enemy.targetY - enemy.y
-  local distance = math.sqrt(dx * dx + dy * dy)
-
-  if distance > 0 then
-    enemy.x = enemy.x + (dx / distance) * enemy.speed * dt
-    enemy.y = enemy.y + (dy / distance) * enemy.speed * dt
+  for i, enemy in ipairs(enemies) do
+    -- handles enemy movement
+    if not enemy.targetX or not enemy.targetY or math.abs(enemy.x - enemy.targetX) < 40 and math.abs(enemy.y - enemy.targetY) < 40 then
+      enemy.targetX = player.x + love.math.random(0, 40)
+      enemy.targetY = player.y + love.math.random(0, 40)
+    end
+  
+    local dx = enemy.targetX - enemy.x
+    local dy = enemy.targetY - enemy.y
+    local distance = math.sqrt(dx * dx + dy * dy)
+  
+    if distance > 0 then
+      enemy.x = enemy.x + (dx / distance) * enemy.speed * dt
+      enemy.y = enemy.y + (dy / distance) * enemy.speed * dt
+    end
+    --
   end
-  --
 
   -- Update player attack timer
   player.timeSinceLastAttack = player.timeSinceLastAttack + dt
@@ -168,11 +192,13 @@ function love.update(dt)
       hitH = 36
     end
 
-    if enemy.isAlive and checkCollision(hitX, hitY, hitW, hitH, enemy.x, enemy.y, enemy.width, enemy.height) then
-      enemy.isAlive = false
-      print("Enemy hit!")
-      displayMessage("Enemy hit!")
-      player.score = player.score + 1
+    for i, enemy in ipairs(enemies) do
+      if enemy.isAlive and checkCollision(hitX, hitY, hitW, hitH, enemy.x, enemy.y, enemy.width, enemy.height) then
+        enemy.isAlive = false
+        displayMessage("Enemy hit!")
+        table.remove(enemies, i)
+        player.score = player.score + 1
+      end
     end
   end
   --
@@ -180,10 +206,9 @@ function love.update(dt)
   -- Runs clear message function
   clearMessage(dt)
 
-  function love.keypressed(k)
-    if k == 'escape' then
-       love.event.quit()
-    end
+  -- exits the game if you press Esc
+  if love.keyboard.isDown('escape') then
+    love.event.quit()
   end
 end
 
@@ -196,14 +221,16 @@ function love.draw()
   -- Draws the player, position x, position y, 0 rotation, player scaleX, player scaleY)
   love.graphics.draw(player.image, player.x, player.y, 0, player.scale, player.scale)
 
-  -- draw enemy
-  if enemy.isAlive then
-    if enemy.image then
-      love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, 2, 2)
-    else
-      love.graphics.setColor(1, 0, 0, .5)
-      love.graphics.rectangle("fill", enemy.x, enemy.y, enemy.width, enemy.height)
-      love.graphics.setColor(1, 1, 1)
+  -- draw enemies
+  for i, enemy in ipairs(enemies) do
+    if enemy.isAlive then
+      if enemy.image then
+        love.graphics.draw(enemy.image, enemy.x, enemy.y, 0, 2, 2)
+      else
+        love.graphics.setColor(1, 0, 0, .5)
+        love.graphics.rectangle("fill", enemy.x, enemy.y, enemy.width, enemy.height)
+        love.graphics.setColor(1, 1, 1)
+      end
     end
   end
 
@@ -242,8 +269,8 @@ function love.draw()
   love.graphics.print("HP: " .. player.currentHp .. " / " .. player.maxHp, 5, 5)
 
   -- Draws the UI element for ingame messages
-  love.graphics.print(message, 700, 5)
+  love.graphics.print(message, 5, love.graphics.getHeight() - 20)
 
   -- Draws the UI element for player's score
-  love.graphics.print("Score: " .. player.score, 350, 5)
+  love.graphics.print("Score: " .. player.score, love.graphics.getWidth() / 2 - 30, 5)
 end
